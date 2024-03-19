@@ -1,0 +1,26 @@
+state_highway_statistics.csv (might want to split into multiple csv's per attribute or remove unneeded attributes)
+ - https://www.bts.gov/browse-statistical-products-and-data/state-transportation-statistics/state-highway-travel
+
+transportation_emissions_by_state.xlsx (need to format and convert to csv)
+ - https://www.eia.gov/environment/emissions/state/ 
+ - ("Transportation energy-related carbon dioxide emissions")
+
+commute_mode_share_by_state.csv
+ - https://www.bts.gov/browse-statistical-products-and-data/state-transportation-statistics/commute-mode
+
+state_and_local_transportation_expendatures_by_state.csv (formatted to only include expendatures for transit and highways)
+ - https://www.bts.gov/browse-statistical-products-and-data/state-transportation-statistics/state-transportation-numbers
+ - ("State and Local Government Transportation Revenues and Expenditures by State")
+
+
+NEED to download:
+ - State population counts by year
+ - State shapefiles
+
+Other data might want to download:
+ - https://www.bts.gov/browse-statistical-products-and-data/state-transportation-statistics/amtrak-ridership
+ - https://www.bts.gov/state-transportation-infrastructure
+
+Inspiration:
+ - Easier to use version of this Tableau App
+ - https://www.bts.gov/browse-statistical-products-and-data/state-transportation-statistics/state-transportation-numbers
