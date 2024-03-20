@@ -1,1 +1,1 @@
-Add data sources to the data folder
+For now, data sources are in the _in progress_ folder. I still need to finish cleaning data and convert to geojson or topojson.
