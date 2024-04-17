@@ -8,6 +8,29 @@ var attrArray = ["state","year","co2_emissions","transit_exp_local","highway_exp
             "commute_at_home_pct","transit_ridership","highway_gas_use","highway_vmt","vehicles,licensed_drivers"];
 expressed = attrArray[9];
 
+//chart frame dimensions
+var chartWidth = window.innerWidth * 0.425,
+    chartHeight = 473,
+    leftPadding = 25,
+    rightPadding = 2,
+    topBottomPadding = 5,
+    chartInnerWidth = chartWidth - leftPadding - rightPadding,
+    chartInnerHeight = chartHeight - topBottomPadding * 2,
+    translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+
+
+// y scale from setChart function, moved to "global" scope
+var yScale = d3.scaleLinear()
+    .range([0, chartHeight])
+    .domain([0, 105]);
+
+/* --- yScale from activity 11 code base
+//create a scale to size bars proportionally to frame and for axis
+var yScale = d3.scaleLinear()
+    .range([463, 0])
+    .domain([0, 110]);
+*/
+
 //execute script when window is loaded
 window.onload = setMap();
 
@@ -103,11 +126,14 @@ function setMap(){
         //create the color scale
         var colorScale = makeColorScale(csvData);
 
-        //Example 1.3 line 24...add enumeration units to the map
-        setEnumerationUnits(usStates, map, path, colorScale);
+        // color choropleth based on color scale
+        colorChoropleth(usStates, map, path, colorScale);
 
         //add coordinated visualization to the map
         setChart(csvData, colorScale);
+
+        // create dropdown menu to reexpress map
+        createDropdown(csvData);
     };
 };
 
@@ -161,7 +187,7 @@ function makeColorScale(data){
 };
 
 
-function setEnumerationUnits(usStates, map, path, colorScale){
+function colorChoropleth(usStates, map, path, colorScale){
     // change fill color of us states
     var states = map.selectAll(".states")
         .style("fill", function(d){
@@ -184,13 +210,6 @@ function setChart(csvData, colorScale){
         .attr("height", chartHeight)
         .attr("class", "chart");
 
-
-
-    
-    // create a scale to size bars proportionally to frame
-    var yScale = d3.scaleLinear()
-        .range([0, chartHeight])
-        .domain([0, 105]);
 
     // set bars for each state
     var bars = chart.selectAll(".bars")
@@ -243,7 +262,7 @@ function setChart(csvData, colorScale){
         .text(function(d){
             return d3.format(".2f")(d[expressed]) + '%';
         })
-        .attr("transform", function(d, i) {
+        .attr("transform", function(d, i) { // rotate labels to be vertical
 
             var locationData = this.getBBox();
             var centerX = locationData.x + (locationData.width / 2);
@@ -252,7 +271,7 @@ function setChart(csvData, colorScale){
             var result = 'translate(' + centerX + ',' + centerY + ')';
             result += 'rotate(-90)';
             result += 'translate(' + (-centerX) + ',' + (-centerY) + ')';
-            result += 'translate(35,0)';
+            result += 'translate(35,0)'; //offset vertically
             return result;
         });
 
@@ -272,5 +291,80 @@ function setChart(csvData, colorScale){
 
 };
 
+
+// function to create a dropdown menu for attribute selection
+function createDropdown(csvData){
+    //add select element
+    var dropdown = d3.select("body")
+        .append("select")
+        .attr("class", "dropdown")
+        .on("change", function(){
+            changeAttribute(this.value, csvData)
+        });
+
+    //add initial option
+    var titleOption = dropdown.append("option")
+        .attr("class", "titleOption")
+        .attr("disabled", "true")
+        .text("Select Attribute");
+
+    //add attribute name options
+    var attrOptions = dropdown.selectAll("attrOptions")
+        .data(attrArray)
+        .enter()
+        .append("option")
+        .attr("value", function(d){ return d })
+        .text(function(d){ return d });
+};
+
+
+//dropdown change event handler
+function changeAttribute(attribute, csvData) {
+    //change the expressed attribute
+    expressed = attribute;
+
+    //recreate the color scale
+    var colorScale = makeColorScale(csvData);
+
+    //recolor enumeration units
+    var states = d3.selectAll(".states")
+        .transition()
+        .delay(100)        
+        .style("fill", function (d) {
+            var value = d.properties[expressed];
+            if (value) {
+                return colorScale(d.properties[expressed]);
+            } else {
+                return "#ccc";
+            }
+        });
+    
+    //Sort, resize, and recolor bars
+    var bars = d3.selectAll(".bars")
+        //Sort bars
+        .sort(function(a, b){
+            return b[expressed] - a[expressed];
+        })
+        .attr("x", function(d, i){
+            return i * (chartInnerWidth / csvData.length) + leftPadding;
+        })
+        //resize bars
+        .attr("height", function(d, i){
+            return 463 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d, i){
+            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+        })
+        //recolor bars
+        .style("fill", function(d){            
+            var value = d[expressed];            
+            if(value) {                
+                return colorScale(value);            
+            } else {                
+                return "#ccc";            
+            }    
+    });
+        
+}
 
 })();
