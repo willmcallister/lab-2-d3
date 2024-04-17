@@ -120,7 +120,17 @@ function setMap(){
             .attr("class", function(d){
                 return "states " + d.properties.name;
             })
-            .attr("d", path);
+            .attr("d", path)
+            .on("mouseover", function(event, d){
+                highlight(d.properties);
+            })
+            .on("mouseout", function(event, d){
+                dehighlight(d.properties);
+            });
+
+        var desc = states.append("desc")
+            .text('{"stroke": "#000", "stroke-width": "0.5px"}');
+            
 
 
         //create the color scale
@@ -199,8 +209,8 @@ function colorChoropleth(usStates, map, path, colorScale){
 //function to create coordinated bar chart
 function setChart(csvData, colorScale){
     // chart frame dimensions
-    var chartWidth = window.innerWidth * 0.425,
-        chartHeight = 460;
+    chartWidth = window.innerWidth * 0.425;
+    chartHeight = 460;
 
     
     // create a second svg element to hold the bar chart
@@ -211,83 +221,53 @@ function setChart(csvData, colorScale){
         .attr("class", "chart");
 
 
-    // set bars for each state
+    // create bars for each state
     var bars = chart.selectAll(".bars")
         .data(csvData)
         .enter()
         .append("rect")
-        .sort(function(a, b){
-            return a[expressed]-b[expressed]
-        })
         .attr("class", function(d){
             return "bars " + d.state;
         })
-        .attr("width", chartWidth / csvData.length - 1)
-        .attr("x", function(d, i){
-            return i * (chartWidth / csvData.length);
-        })        
-        .attr("height", function(d){
-            console.log("height: " + parseFloat(d[expressed]));
-            return yScale(parseFloat(d[expressed]));
+        .on("mouseover", function(event, d){
+            highlight(d);
         })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed]));
-        })
-        .style("fill", function(d){
-            return colorScale(d[expressed]);
+        .on("mouseout", function(event, d){
+            dehighlight(d);
         });
-    
 
+    var desc = bars.append("desc")
+        .text('{"stroke": "none", "stroke-width": "0px"}');
+    
     
     //annotate bars with attribute value text
     var numbers = chart.selectAll(".numbers")
         .data(csvData)
         .enter()
         .append("text")
-        .sort(function(a, b){
-            return a[expressed]-b[expressed]
-        })
         .attr("class", function(d){
             return "numbers " + d.state;
         })
-        .attr("text-anchor", "middle")
-        //.attr("transform", "rotate(2)")
-        .attr("x", function(d, i){
-            var fraction = chartWidth / csvData.length;
-            return i * fraction + (fraction - 1) / 2;
-        })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed])) + 15;
-        })
+        .attr("text-anchor", "middle");
+
+
+
+    setBarchart(csvData, colorScale, bars, numbers);
+
+
+
+    var chartTitle = chart.append("text")
+        .attr("x", 20)
+        .attr("y", 40)
+        .attr("class", "chartTitle")
         .text(function(d){
-            return d3.format(".2f")(d[expressed]) + '%';
-        })
-        .attr("transform", function(d, i) { // rotate labels to be vertical
-
-            var locationData = this.getBBox();
-            var centerX = locationData.x + (locationData.width / 2);
-            var centerY = locationData.y + (locationData.height / 2);
-
-            var result = 'translate(' + centerX + ',' + centerY + ')';
-            result += 'rotate(-90)';
-            result += 'translate(' + (-centerX) + ',' + (-centerY) + ')';
-            result += 'translate(35,0)'; //offset vertically
-            return result;
+            if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
+                return "Percent " + expressed + " in each State";
+            }
+            else{
+                return expressed + " per capita in each state";
+            }
         });
-
-        var chartTitle = chart.append("text")
-            .attr("x", 20)
-            .attr("y", 40)
-            .attr("class", "chartTitle")
-            .text(function(d){
-                if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
-                    return "Percent " + expressed + " in each State";
-                }
-                else{
-                    return expressed + " per capita in each state";
-                }
-                    "Number of Variable " + expressed[3] + " in each State"
-            });
 
 };
 
@@ -329,7 +309,8 @@ function changeAttribute(attribute, csvData) {
     //recolor enumeration units
     var states = d3.selectAll(".states")
         .transition()
-        .delay(100)        
+        .delay(100)
+        .duration(500)        
         .style("fill", function (d) {
             var value = d.properties[expressed];
             if (value) {
@@ -340,31 +321,122 @@ function changeAttribute(attribute, csvData) {
         });
     
     //Sort, resize, and recolor bars
-    var bars = d3.selectAll(".bars")
-        //Sort bars
-        .sort(function(a, b){
-            return b[expressed] - a[expressed];
+    var bars = d3.selectAll(".bars");
+    var numbers = d3.selectAll(".chart").selectAll(".numbers");
+
+    setBarchart(csvData, colorScale, bars, numbers);
+        
+}
+
+
+function setBarchart(csvData, colorScale, bars, numbers){ 
+    console.log("ran");
+    
+    //Sort, resize, and recolor bars
+    bars.sort(function(a, b){ // sort bars
+            return a[expressed] - b[expressed];
         })
+        .transition()
+        .delay(100)
+        .duration(500)
+        .attr("width", chartWidth / csvData.length - 1)
         .attr("x", function(d, i){
             return i * (chartInnerWidth / csvData.length) + leftPadding;
         })
         //resize bars
         .attr("height", function(d, i){
-            return 463 - yScale(parseFloat(d[expressed]));
+            return chartHeight - yScale(parseFloat(d[expressed]));
         })
         .attr("y", function(d, i){
+            console.log("r");
+            //console.log("height: " + parseFloat(d[expressed]));
+            //console.log("yscale: " + yScale(parseFloat(d[expressed])));
             return yScale(parseFloat(d[expressed])) + topBottomPadding;
         })
         //recolor bars
-        .style("fill", function(d){            
-            var value = d[expressed];            
-            if(value) {                
-                return colorScale(value);            
+        .style("fill", function(d){                     
+            console.log("l");
+            if(d[expressed]) {                
+                return colorScale(d[expressed]);            
             } else {                
                 return "#ccc";            
             }    
-    });
-        
+        });
+
+    //annotate bars with attribute value text
+    numbers.sort(function(a, b){
+            return a[expressed]-b[expressed]
+        })
+        .attr("x", function(d, i){
+            var fraction = chartWidth / csvData.length;
+            return i * fraction + (fraction - 1) / 2;
+        })
+        .attr("y", function(d){
+            return chartHeight - yScale(parseFloat(d[expressed])) + 15;
+        })
+        .text(function(d){
+            if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
+                return d3.format(".2f")(d[expressed]) + '%';
+            }
+            else{
+                return d3.format(".2f")(d[expressed])
+            }
+        })
+        .attr("transform", function(d, i) { // rotate labels to be vertical
+            var locationData = this.getBBox();
+            var centerX = locationData.x + (locationData.width / 2);
+            var centerY = locationData.y + (locationData.height / 2);
+
+            var result = 'translate(' + centerX + ',' + centerY + ')';
+            result += 'rotate(-90)';
+            result += 'translate(' + (-centerX) + ',' + (-centerY) + ')';
+            result += 'translate(35,0)'; //offset vertically
+            return result;
+        });
+
+}
+
+
+//function to highlight enumeration units and bars
+function highlight(props){
+    //change stroke
+    var selectedBar = d3.selectAll("." + props.state)
+        .style("stroke", "blue")
+        .style("stroke-width", "2");
+
+    var selectedState = d3.selectAll("." + props.name)
+        .style("stroke", "blue")
+        .style("stroke-width", "2");
+};
+
+
+function dehighlight(props){
+    var selected = d3.selectAll("." + props.state)
+        .style("stroke", function(){
+            return getStyle(this, "stroke")
+        })
+        .style("stroke-width", function(){
+            return getStyle(this, "stroke-width")
+        });
+
+    var selected = d3.selectAll("." + props.name)
+        .style("stroke", function(){
+            return getStyle(this, "stroke")
+        })
+        .style("stroke-width", function(){
+            return getStyle(this, "stroke-width")
+        });
+
+    function getStyle(element, styleName){
+        var styleText = d3.select(element)
+            .select("desc")
+            .text();
+
+        var styleObject = JSON.parse(styleText);
+
+        return styleObject[styleName];
+    };
+
 }
 
 })();
