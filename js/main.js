@@ -5,7 +5,7 @@
 var attrArray = ["state","year","co2_emissions","transit_exp_local","highway_exp_local",
             "transit_exp_state","highway_exp_state","commute_bike_pct","commute_carpool_pct",
             "commute_drove_pct","commute_transit_pct","commute_taxi_pct","commute_walked_pct",
-            "commute_at_home_pct","transit_ridership","highway_gas_use","highway_vmt","vehicles,licensed_drivers"];
+            "commute_at_home_pct","transit_ridership","highway_gas_use","highway_vmt","vehicles","licensed_drivers"];
 expressed = attrArray[9];
 
 //chart frame dimensions
@@ -24,12 +24,12 @@ var yScale = d3.scaleLinear()
     .range([0, chartHeight])
     .domain([0, 105]);
 
-/* --- yScale from activity 11 code base
-//create a scale to size bars proportionally to frame and for axis
-var yScale = d3.scaleLinear()
-    .range([463, 0])
-    .domain([0, 110]);
-*/
+
+const zoom = d3.zoom()
+    .scaleExtent([0.5, 10])
+    //.translateExtent([[0, 0], [width, height]])
+    .on('zoom', handleZoom);
+
 
 //execute script when window is loaded
 window.onload = setMap();
@@ -126,11 +126,14 @@ function setMap(){
             })
             .on("mouseout", function(event, d){
                 dehighlight(d.properties);
-            });
+            })
+            .on("mousemove", moveLabel);
 
         var desc = states.append("desc")
             .text('{"stroke": "#000", "stroke-width": "0.5px"}');
             
+
+        map.call(zoom);
 
 
         //create the color scale
@@ -144,6 +147,9 @@ function setMap(){
 
         // create dropdown menu to reexpress map
         createDropdown(csvData);
+
+        // create label checkbox
+        createCheckbox();
     };
 };
 
@@ -190,6 +196,9 @@ function makeColorScale(data){
         domainArray.push(val);
     };
 
+    // update yScale function to update the scale for creating bar chart
+    updateYScale(domainArray);
+
     //assign array of expressed values as scale domain
     colorScale.domain(domainArray);
 
@@ -234,7 +243,8 @@ function setChart(csvData, colorScale){
         })
         .on("mouseout", function(event, d){
             dehighlight(d);
-        });
+        })
+        .on("mousemove", moveLabel);
 
     var desc = bars.append("desc")
         .text('{"stroke": "none", "stroke-width": "0px"}');
@@ -251,29 +261,24 @@ function setChart(csvData, colorScale){
         .attr("text-anchor", "middle");
 
 
-
-    setBarchart(csvData, colorScale, bars, numbers);
-
-
-
     var chartTitle = chart.append("text")
         .attr("x", 20)
         .attr("y", 40)
-        .attr("class", "chartTitle")
-        .text(function(d){
-            if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
-                return "Percent " + expressed + " in each State";
-            }
-            else{
-                return expressed + " per capita in each state";
-            }
-        });
+        .attr("class", "chartTitle");
 
+    setBarchart(csvData, colorScale, bars, numbers, chartTitle);
 };
 
 
 // function to create a dropdown menu for attribute selection
 function createDropdown(csvData){
+    //create new attrArray without 'state' and 'year'
+    //(prevents those values from being displayed)
+    var filteredAttrArray = [];
+    for(i = 2; i < attrArray.length; i++){
+        filteredAttrArray[i-2] = attrArray[i];
+    }
+    
     //add select element
     var dropdown = d3.select("body")
         .append("select")
@@ -290,7 +295,7 @@ function createDropdown(csvData){
 
     //add attribute name options
     var attrOptions = dropdown.selectAll("attrOptions")
-        .data(attrArray)
+        .data(filteredAttrArray)
         .enter()
         .append("option")
         .attr("value", function(d){ return d })
@@ -298,10 +303,27 @@ function createDropdown(csvData){
 };
 
 
+function createCheckbox(){
+    var checkbox = d3.select("body")
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("class", "number_labels")
+        .attr("value", "view_layer")
+        .append("label")
+        .text("Show/Hide Chart Labels")
+        //.append("label")
+        .on("change", console.log("changed"));
+
+    //var checkboxTitle = checkbox.append("label")
+    //    .text("Show/Hide Chart Labels");
+};
+
+
 //dropdown change event handler
 function changeAttribute(attribute, csvData) {
     //change the expressed attribute
     expressed = attribute;
+
 
     //recreate the color scale
     var colorScale = makeColorScale(csvData);
@@ -323,13 +345,23 @@ function changeAttribute(attribute, csvData) {
     //Sort, resize, and recolor bars
     var bars = d3.selectAll(".bars");
     var numbers = d3.selectAll(".chart").selectAll(".numbers");
+    var chartTitle = d3.selectAll(".chartTitle");
 
-    setBarchart(csvData, colorScale, bars, numbers);
-        
+    setBarchart(csvData, colorScale, bars, numbers, chartTitle);
 }
 
 
-function setBarchart(csvData, colorScale, bars, numbers){ 
+function setBarchart(csvData, colorScale, bars, numbers, chartTitle){ 
+    //change chart title
+    chartTitle.text(function(d){
+        if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
+            return "Percent " + expressed + " in each State";
+        }
+        else{
+            return expressed + " per capita in each state";
+        }
+    });
+    
     //Sort, resize, and recolor bars
     bars.sort(function(a, b){ // sort bars
             return a[expressed] - b[expressed];
@@ -344,9 +376,11 @@ function setBarchart(csvData, colorScale, bars, numbers){
         //resize bars
         .attr("height", function(d, i){
             //return chartHeight - yScale(parseFloat(d[expressed]));
+
             
+
             return chartHeight - (chartHeight - yScale(parseFloat(d[expressed])));
-            //return d[expressed];
+            
         })
         .attr("y", function(d, i){
             //console.log("height: " + parseFloat(d[expressed]));
@@ -409,6 +443,8 @@ function highlight(props){
         .style("stroke", "blue")
         .style("stroke-width", "2");
 
+    //add label pop-up
+    setLabel(props);
 };
 
 
@@ -435,14 +471,77 @@ function dehighlight(props){
         return styleObject[styleName];
     };
 
+    //remove label pop-up
+    d3.select(".infolabel")
+        .remove();
 }
 
 
+//function to create dynamic label
+function setLabel(props){
+    //label content
+    var labelAttribute = "<h1>" + props[expressed] +
+        "</h1><b>" + expressed + "</b>";
+
+    //create info label div
+    var infolabel = d3.select("body")
+        .append("div")
+        .attr("class", "infolabel")
+        .attr("id", props.postal + "_label")
+        .html(labelAttribute);
+
+    var stateName = infolabel.append("div")
+        .attr("class", "labelname")
+        .html(function(){
+            if(props.name)
+                return props.name;
+            else
+                return props.state;
+        });
+};
 
 
-// -- temp until highlight/dehighlight fixed
-//function highlight(props){};
-//function dehighlight(props){};
+// function to move info label with mouse
+function moveLabel(){
+    //get width of label
+    var labelWidth = d3.select(".infolabel")
+        .node()
+        .getBoundingClientRect()
+        .width;
 
+    //use coordinates of mousemove event to set label coordinates
+    var x1 = event.clientX + 10,
+        y1 = event.clientY - 75,
+        x2 = event.clientX - labelWidth - 10,
+        y2 = event.clientY + 25;
+
+    //horizontal label coordinate, testing for overflow
+    var x = event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1; 
+    //vertical label coordinate, testing for overflow
+    var y = event.clientY < 75 ? y2 : y1; 
+
+    d3.select(".infolabel")
+        .style("left", x + "px")
+        .style("top", y + "px");
+};
+
+
+function handleZoom(e){
+    d3.selectAll("path")
+        .attr('transform', e.transform);
+};
+
+
+//update yScale to just above highest value in array
+function updateYScale(domainArray){
+    maxVal = d3.max(domainArray);
+    yScale.domain([0,round5(maxVal + 0.05*maxVal)]);
+};
+
+//round up x to nearest increment of 5
+function round5(x)
+{
+    return Math.ceil(x / 5) * 5;
+}
 
 })();
