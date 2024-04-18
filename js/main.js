@@ -11,7 +11,7 @@ expressed = attrArray[9];
 //chart frame dimensions
 var chartWidth = window.innerWidth * 0.425,
     chartHeight = 473,
-    leftPadding = 25,
+    leftPadding = 2,
     rightPadding = 2,
     topBottomPadding = 5,
     chartInnerWidth = chartWidth - leftPadding - rightPadding,
@@ -118,7 +118,7 @@ function setMap(){
             .enter()
             .append("path")
             .attr("class", function(d){
-                return "states " + d.properties.name;
+                return "states " + d.properties.postal;
             })
             .attr("d", path)
             .on("mouseover", function(event, d){
@@ -227,7 +227,7 @@ function setChart(csvData, colorScale){
         .enter()
         .append("rect")
         .attr("class", function(d){
-            return "bars " + d.state;
+            return "bars " + d.postal;
         })
         .on("mouseover", function(event, d){
             highlight(d);
@@ -330,8 +330,6 @@ function changeAttribute(attribute, csvData) {
 
 
 function setBarchart(csvData, colorScale, bars, numbers){ 
-    console.log("ran");
-    
     //Sort, resize, and recolor bars
     bars.sort(function(a, b){ // sort bars
             return a[expressed] - b[expressed];
@@ -345,17 +343,21 @@ function setBarchart(csvData, colorScale, bars, numbers){
         })
         //resize bars
         .attr("height", function(d, i){
-            return chartHeight - yScale(parseFloat(d[expressed]));
+            //return chartHeight - yScale(parseFloat(d[expressed]));
+            
+            return chartHeight - (chartHeight - yScale(parseFloat(d[expressed])));
+            //return d[expressed];
         })
         .attr("y", function(d, i){
-            console.log("r");
             //console.log("height: " + parseFloat(d[expressed]));
             //console.log("yscale: " + yScale(parseFloat(d[expressed])));
-            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+            
+            //return yScale(parseFloat(d[expressed])) + topBottomPadding;
+            
+            return chartHeight - yScale(parseFloat(d[expressed]));
         })
         //recolor bars
         .style("fill", function(d){                     
-            console.log("l");
             if(d[expressed]) {                
                 return colorScale(d[expressed]);            
             } else {                
@@ -363,13 +365,16 @@ function setBarchart(csvData, colorScale, bars, numbers){
             }    
         });
 
+
     //annotate bars with attribute value text
     numbers.sort(function(a, b){
             return a[expressed]-b[expressed]
         })
         .attr("x", function(d, i){
-            var fraction = chartWidth / csvData.length;
-            return i * fraction + (fraction - 1) / 2;
+            //var fraction = chartWidth / csvData.length;
+            //return i * fraction + (fraction - 1) / 2;
+
+            return i * (chartInnerWidth / csvData.length) + leftPadding + 5;
         })
         .attr("y", function(d){
             return chartHeight - yScale(parseFloat(d[expressed])) + 15;
@@ -400,32 +405,25 @@ function setBarchart(csvData, colorScale, bars, numbers){
 //function to highlight enumeration units and bars
 function highlight(props){
     //change stroke
-    var selectedBar = d3.selectAll("." + props.state)
+    var selected = d3.selectAll("." + props.postal)
         .style("stroke", "blue")
         .style("stroke-width", "2");
 
-    var selectedState = d3.selectAll("." + props.name)
-        .style("stroke", "blue")
-        .style("stroke-width", "2");
 };
 
 
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.state)
+    
+    var selected = d3.selectAll("." + props.postal)
         .style("stroke", function(){
-            return getStyle(this, "stroke")
-        })
-        .style("stroke-width", function(){
-            return getStyle(this, "stroke-width")
-        });
 
-    var selected = d3.selectAll("." + props.name)
-        .style("stroke", function(){
             return getStyle(this, "stroke")
         })
         .style("stroke-width", function(){
+
             return getStyle(this, "stroke-width")
         });
+    
 
     function getStyle(element, styleName){
         var styleText = d3.select(element)
@@ -438,5 +436,13 @@ function dehighlight(props){
     };
 
 }
+
+
+
+
+// -- temp until highlight/dehighlight fixed
+//function highlight(props){};
+//function dehighlight(props){};
+
 
 })();
