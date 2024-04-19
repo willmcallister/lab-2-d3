@@ -144,8 +144,15 @@
                 .text('{"stroke": "#000", "stroke-width": "0.5px"}');
                 
     
-            map.call(zoom);
+            //map.call(zoom);
     
+            var initX = -20,
+                initY = 20,
+                initScale = 0.85;
+
+            d3.selectAll("path")
+                .call(zoom.transform, d3.zoomIdentity.translate(initX, initY).scale(initScale))
+                .attr('transform', `translate(${initX}, ${initY})scale(${initScale})`);
     
             //create the color scale
             var colorScale = makeColorScale(csvData);
@@ -162,8 +169,12 @@
             // create label checkbox
             createCheckbox();
 
-            //var checkbox = d3.select("#bar_labels")
-            //    .on("change", updateBarLabels);
+            // create text below map and map elements
+            var bodyText = d3.select("body")
+                .append("div")
+                .attr("class", "bodyText")
+                .append("text")
+                .html("Visualization Created by Will McAllister for Geog 575 Lab 2");
         };
     };
     
@@ -204,11 +215,11 @@
     //function to create color scale generator
     function makeColorScale(data){
         var colorClasses = [
-            "#D4B9DA",
-            "#C994C7",
-            "#DF65B0",
-            "#DD1C77",
-            "#980043"
+            "#fef0d9",
+            "#fdcc8a",
+            "#fc8d59",
+            "#e34a33",
+            "#b30000"
         ];
     
         //create color scale generator
@@ -449,7 +460,7 @@
     function highlight(props){
         //change stroke
         var selected = d3.selectAll("." + props.postal)
-            .style("stroke", "blue")
+            .style("stroke", "#00B3B3")
             .style("stroke-width", "2");
     
         //add label pop-up
@@ -491,13 +502,6 @@
         //label content
         var labelAttribute = "<h1>" + d3.format(".2f")(props[expressed]) +
             "</h1><b>" + enumerationUnits[aliasIndex] + "</b>";
-        
-        /*if(attrArray.indexOf(expressed) >= 7 && attrArray.indexOf(expressed) <= 13){
-            return d3.format(".2f")(d[expressed]) + '%';
-        }
-        else{
-            return d3.format(".2f")(d[expressed])
-        }*/
         
         //create info label div
         var infolabel = d3.select("body")

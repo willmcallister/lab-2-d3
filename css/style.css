@@ -9,10 +9,24 @@ text {
     font-family: sans-serif;
 }
 
+
 h1 {
     color:white;
     margin: 10px 0 5px 20px;
     font-family: sans-serif;
+}
+
+
+.bodyText {
+    font-style: italic;
+    font-size: small;
+    bottom: 5px;
+    float: left;
+    padding-bottom: 10px;
+	padding-top: 10px;
+	text-align: center;
+	bottom: 0px;
+	width: 100%;
 }
 
 .countries {
