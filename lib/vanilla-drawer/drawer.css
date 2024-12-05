@@ -24,11 +24,16 @@
 
 .drawer__header {
     /* Optional */
-    padding: 1rem;
+    padding: 0.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #ddd;
+}
+
+.drawer__header__content {
+    margin-right: 0.5rem;
+    padding: 0;
 }
 
 .drawer__close {
@@ -46,7 +51,7 @@
 }
 
 .drawer__expand__button {
-    margin: 0;
+    margin: 0 0.5rem 0 0.5rem;
     padding: 0;
     border: none;
     width: 25px;
@@ -72,7 +77,7 @@
     right: 0;
     bottom: 0;
     /* collapsed drawer height */
-    height: 80px;
+    height: 65px;
     width: 100%;
     max-width: 500px;
     z-index: 9999;
@@ -108,7 +113,8 @@
     height: 100%;
     flex-grow: 1;
     /* Optional */
-    padding: 1.5rem;
+    padding: 0.75rem;
+    padding-top: 0rem;
 }
 
 .drawer--bottom .drawer__wrapper {

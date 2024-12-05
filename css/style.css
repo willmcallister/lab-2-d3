@@ -1,21 +1,21 @@
 
 html {
-    background-color: #000;
+    background-color: #fefefe;
     width: 100vw;
 }
 
 body {
     overflow: hidden;
+    margin: 0;
 }
 
 h1 {
-    color:white;
-    margin: 10px 0 5px 20px;
+    /*margin: 10px 0 5px 20px;*/
+    margin: 0;
     font-family: sans-serif;
 }
 
 p {
-    color: white;
     margin: 10px 0 5px 20px;
     font-family: sans-serif;
 }
@@ -38,12 +38,12 @@ p {
 
 .countries {
     fill: #eee;
-    /*stroke: #ddd;*/
+    stroke: #ccc;
     stroke-width: 2px;
 }
 
 .states {
-    stroke: #000;
+    stroke: #3c3c3c;
     stroke-width: 0.5px;
     stroke-linecap: round;
 }
@@ -62,7 +62,7 @@ p {
 
 .map {
     border: medium solid #fff;
-    transform: translateX(2.5px);
+    /*transform: translateX(2.5px);*/
     width: 50%;
 }
 
@@ -143,7 +143,6 @@ fieldset {
 
 
 .label_options {
-    color: white;
     font-family: sans-serif;
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
@@ -164,12 +163,12 @@ fieldset {
     }
     .dropdown {
         display: block;
-        width: 90%;
+        width: 100%;
         margin: 0;
         height: 3rem;
         text-align: center;
         background-color: #fff;
-        font-size: 1.125rem;
+        font-size: 1rem;
     }
     body {
         height: 50%;
@@ -179,13 +178,28 @@ fieldset {
     }
     #mobileSiteTitle{
         display: block;
+        font-size: 1.25rem;
+        padding-left: 10px;
+        padding-top: 0.5rem;
+    }
+    #header{
+        position: relative;
+        height: 2rem;
+        box-shadow: 0 1px 4px #a4a4a4;
     }
     #intro-paragraph{
         display: none;
     }
     .map {
-        width: calc(100% - 10px);
-        height: calc(50vh - 60px)
+        width: 100%;
+        height: calc(100vh - 65px - 2rem);
+        border: none;
+    }
+    .bodyText {
+        display: none;
+    }
+    fieldset {
+        display: none;
     }
   }
     
