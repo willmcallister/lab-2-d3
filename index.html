@@ -5,8 +5,10 @@
         <meta name="viewport" content="width=device-width">
         <title>Transportation Data Explorer</title>
 
-        <!--put your external stylesheet links here-->
+        <!-- stylesheets -->
         <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="lib/vanilla-drawer/drawer.css">
+
         <!--[if IE<9]>
             <link rel="stylesheet" href="css/style.ie.css">
         <![endif]-->
@@ -19,17 +21,42 @@
     <body>
         <!--put your initial page content here-->
         <div id="intro">
-            <h1 id="siteTitle">US Transportation Data Explorer (2021 Data)</h1>
-            <text>Data is from the US Bureau of Transportation Statistics & US Energy Information Administration
-                <br></text> 
-            <text>Spatial data is from Natural Earth</text>
+            <h1 id="siteTitle">US Transportation Data Explorer 
+                (2021 Data)
+            </h1>
+            <h1 id="mobileSiteTitle">Transit Data Explorer</h1>
+            <p id="intro-paragraph">Data is from the US Bureau of Transportation Statistics 
+                & US Energy Information Administration<br>Spatial data 
+                is from Natural Earth
+            </p>
         </div>
+
+        <!--<div><a href="#" data-drawer-trigger aria-controls="drawer-name-bottom" aria-expanded="false">Open Drawer from bottom side</a></div>-->
+        
+        <section class="drawer drawer--bottom is-active is-visible" id="drawer-name-bottom" data-drawer-target>
+        <!--<div class="drawer__overlay" data-drawer-close tabindex="-1"></div>-->
+            <div class="drawer__wrapper is-expanded">
+                <div class="drawer__header">
+                    <div class="drawer__header__content"></div>
+                    <!--<button class="drawer__close" data-drawer-close aria-label="Close Drawer"></button>-->
+                    <button class="drawer__expand__button is-expanded" data-drawer-expand aria-label="Expand Drawer"></button>
+                </div>
+                <div class="drawer__content">  
+                </div>
+                
+            </div>
+        </section>
+
         <!--you can also use this space for internal scripts;
         place these within <script> tags-->
 
-        <!--put your external script links here-->
+        <!-- external scripts -->
         <script type="text/javascript" src="lib/d3.v7.js"></script>
         <script type="text/javascript" src="lib/topojson.min.js"></script>
+
+        <!-- JS Drawer -->
+        <script type="text/javascript" src="lib/vanilla-drawer/drawer.js"></script>
+        
         <script type="text/javascript" src="js/main.js"></script>
     </body>
 </html>

@@ -2,18 +2,18 @@
 (function(){
 
     // dummy global variables
-    var attrArray = ["state","year","co2_emissions","transit_exp_local","highway_exp_local",
+    const attrArray = ["state","year","co2_emissions","transit_exp_local","highway_exp_local",
                 "transit_exp_state","highway_exp_state","commute_bike_pct","commute_carpool_pct",
                 "commute_drove_pct","commute_transit_pct","commute_taxi_pct","commute_walked_pct",
                 "commute_at_home_pct","transit_ridership","highway_gas_use","highway_vmt","vehicles","licensed_drivers"];
 
-    var attrArrayAlias = ["Transportation CO2 Emissions", "Public Transit Expenditure - Local",
+    const attrArrayAlias = ["Transportation CO2 Emissions", "Public Transit Expenditure - Local",
         "Highway Expenditure - Local", "Public Transit Expenditure - State", "Highway Expenditure - State", "Bicycle Commute Mode Share", 
         "Carpool Commute Mode Share", "Drove Alone Commute Mode Share", "Public Transit Commute Mode Share", "Taxi Commute Mode Share",
         "Walked Commute Mode Share", "Worked From Home Commute Mode Share", "Transit Ridership", "Highway Gas Use", "Highway Miles Traveled",
         "Vehicles", "Licensed Drivers"];
 
-    var enumerationUnits = ["million metric tons of CO2", "thousands of $", "thousands of $", "thousands of $", "thousands of $",
+    const enumerationUnits = ["million metric tons of CO2", "thousands of $", "thousands of $", "thousands of $", "thousands of $",
         "percent", "percent", "percent", "percent", "percent", "percent", "percent", "trips per capita", "gallons per capita",
         "per capita", "per capita", "per capita"];
                     
@@ -36,18 +36,30 @@
         .domain([0, 105]);
     
     
-    const zoom = d3.zoom()
+    let zoom = d3.zoom()
         .scaleExtent([0.5, 10])
         //.translateExtent([[0, 0], [width, height]])
         .on('zoom', handleZoom);
     
+
+    // Create a MediaQueryList object
+    var checkSmallWidth = window.matchMedia("(max-width: 480px)");
     
+    
+    // Attach listener function on state changes
+    checkSmallWidth.addEventListener("change", function() {
+        resizeHandler();
+    }); 
+    
+
     //execute script when window is loaded
     window.onload = setMap();
     
     // set up choropleth map
     function setMap(){
     
+        resizeHandler();
+
         // map frame dimensions
         var width = window.innerWidth * 0.5,
             height = 460;
@@ -59,8 +71,10 @@
             .attr("width", width)
             .attr("height", height);
     
+        map.call(zoom);
+
         // Albers equal area conic projection for the US
-        var projection = d3.geoAlbers();
+        const projection = d3.geoAlbers();
     
         var path = d3.geoPath()
             .projection(projection);
@@ -82,7 +96,7 @@
     
             // temporarily load spatial data as topojson for conversion
             var countryTemp = data[0],
-            statesTemp = data[1];
+                statesTemp = data[1];
     
             // convert spatial data from topojson to geojson
             var worldCountries = topojson.feature(countryTemp, countryTemp.objects.countries_ne_50m),
@@ -92,17 +106,12 @@
             //loop through csv to assign each set of csv attribute values to geojson state
             for (var i = 0; i < csvData.length; i++) {
                 var csvState = csvData[i]; //the current state
-                var csvKey = csvState.state; //the CSV primary key -- might need to be lowercase
+                var csvKey = csvState.state; //the CSV primary key
         
                 //loop through geojson regions to find correct state
                 for (var a = 0; a < usStates.length; a++) {
                     var geojsonProps = usStates[a].properties; //the current state geojson properties
                     var geojsonKey = geojsonProps.name; //the geojson primary key
-    
-                    if(a === 0) {
-                        //console.log(csvState);
-                    }
-                    
     
                     //where primary keys match, transfer csv data to geojson properties object
                     if (geojsonKey == csvKey) {                  
@@ -144,8 +153,6 @@
                 .text('{"stroke": "#000", "stroke-width": "0.5px"}');
                 
     
-            //map.call(zoom);
-    
             var initX = -20,
                 initY = 20,
                 initScale = 0.85;
@@ -160,7 +167,7 @@
             // color choropleth based on color scale
             colorChoropleth(usStates, map, path, colorScale);
     
-            //add coordinated visualization to the map
+            //add coordinated visualization to the page
             setChart(csvData, colorScale);
     
             // create dropdown menu to reexpress map
@@ -177,6 +184,20 @@
                 .html("Visualization Created by Will McAllister for Geog 575 Lab 2");
         };
     };
+
+    function resizeHandler(){
+        // if width is 480 or less
+        if(checkSmallWidth.matches) {
+            // show drawer
+            document.querySelector('.drawer--bottom').classList.add('is-visible');
+            document.querySelector('.drawer--bottom').classList.add('is-active');
+        }
+        else {
+            // hide drawer
+            document.querySelector('.drawer--bottom').classList.remove('is-visible');
+            document.querySelector('.drawer--bottom').classList.remove('is-active');
+        }
+    }
     
     function updateBarLabels(){
         if(d3.select("#bar_labels").property("checked")){
@@ -250,22 +271,25 @@
                 return colorScale(d.properties[expressed]);
             });
     };
-    
+
     
     //function to create coordinated bar chart
     function setChart(csvData, colorScale){
         // chart frame dimensions
         chartWidth = window.innerWidth * 0.425;
         chartHeight = 460;
-    
-        
-        // create a second svg element to hold the bar chart
-        var chart = d3.select("body")
+
+        var chartLocation = "body";
+
+        // if small screen size, place chart within drawer instead of body
+        if (checkSmallWidth.matches)
+            chartLocation = ".drawer__content";
+
+        // create chart
+        var chart = d3.select(chartLocation)
             .append("svg")
-            .attr("width", chartWidth)
             .attr("height", chartHeight)
             .attr("class", "chart");
-    
     
         // create bars for each state
         var bars = chart.selectAll(".bars")
@@ -314,8 +338,15 @@
     
     // function to create a dropdown menu for attribute selection
     function createDropdown(csvData){        
+        
+        var dropdownLocation = "body";
+
+        // if small screen size, place chart within drawer instead of body
+        if (checkSmallWidth.matches)
+            dropdownLocation = ".drawer__header__content";
+
         //add select element
-        var dropdown = d3.select("body")
+        var dropdown = d3.select(dropdownLocation)
             .append("select")
             .attr("class", "dropdown")
             .on("change", function(){
@@ -358,7 +389,6 @@
         //change the expressed attribute
         expressed = attribute;
     
-    
         //recreate the color scale
         var colorScale = makeColorScale(csvData);
     
@@ -386,6 +416,12 @@
     
     
     function setBarchart(csvData, colorScale, bars, numbers, chartTitle){ 
+        var chart = document.querySelector(".chart");
+
+        if(chart.clientWidth != 0){
+            chartWidth = chart.clientWidth;
+            chartInnerWidth = chartWidth - leftPadding - rightPadding;
+        }
         var aliasIndex = attrArray.indexOf(expressed)-2;
         
         //change chart title and subtitle
@@ -547,6 +583,8 @@
     
     
     function handleZoom(e){
+        console.log("Zoom or panned");
+        
         d3.selectAll("path")
             .attr('transform', e.transform);
     };
