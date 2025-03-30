@@ -2,6 +2,7 @@
 html {
     background-color: #fefefe;
     width: 100vw;
+    font-size: 16px;
 }
 
 body {
@@ -165,7 +166,8 @@ fieldset {
         display: block;
         width: 100%;
         margin: 0;
-        height: 3rem;
+        padding: 0;
+        height: 2.5rem;
         text-align: center;
         background-color: #fff;
         font-size: 1rem;
@@ -192,9 +194,15 @@ fieldset {
     }
     .map {
         width: 100%;
-        height: calc(100vh - 65px - 2rem);
+        height: calc(100vh - 57px - 2rem);
         border: none;
     }
+    @supports (height: 100dvh) {
+        .map {
+            height: calc(100dvh - 57px - 2rem);
+        }
+    }
+
     .bodyText {
         display: none;
     }
@@ -202,4 +210,4 @@ fieldset {
         display: none;
     }
   }
-    
+  
